@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.ues.listadetareas.ui.theme.ListaDeTareasTheme
+import com.ues.listadetareas.ui.theme.TaskApp
 import com.ues.listadetareas.ui.theme.screens.TaskListScreen
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
 
-            TaskListScreen()
+            TaskApp()
 
         }
     }
@@ -38,6 +39,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     ListaDeTareasTheme {
-        Greeting("Android")
+        TaskApp()
     }
 }
