@@ -8,16 +8,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
+import com.ues.listadetareas.data.TaskViewModel
 import com.ues.listadetareas.ui.theme.components.BottomNavigationBar
 import com.ues.listadetareas.ui.theme.components.DrawerContent
+import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskApp() {
+fun TaskApp(viewModel: TaskViewModel) {
     // Servirá para controlar el Drawer
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    val navController = rememberNavController()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -42,13 +47,18 @@ fun TaskApp() {
                 BottomNavigationBar()
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = {/* Acción que premitirá agregar una futura tarea */}) {
+                FloatingActionButton(onClick = {navController.navigate("addTask")}) {
                     Icon(Icons.Default.Add, contentDescription = "Agregar tarea")
                 }
             }
         ) { innerPadding ->
             // Armaremos la pantalla principal
-            MainContent(modifier = Modifier.padding(innerPadding))
+            MainContent(
+                modifier = Modifier.padding(innerPadding),
+                navController = navController,
+                viewModel = viewModel
+                )
         }
     }
 }
+

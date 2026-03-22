@@ -4,20 +4,25 @@ import com.ues.listadetareas.data.TaskDao
 import com.ues.listadetareas.data.TaskEntity
 import com.ues.listadetareas.domain.Task
 import com.ues.listadetareas.domain.TaskRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class TaskRepositoryImpl(
     private val dao: TaskDao
-): TaskRepository {
-    override suspend fun getTasks(): List<Task> {
-        return dao.getTasks().map {
-            Task(
-                id = it.id,
-                title = it.title,
-                description = it.description,
-                isDone = it.isDone
-            )
+) : TaskRepository {
+    override fun getTasks(): Flow<List<Task>> {
+        return dao.getTasks().map { entities ->
+            entities.map { entity ->
+                Task(
+                    id = entity.id,
+                    title = entity.title,
+                    description = entity.description,
+                    isDone = entity.isDone
+                )
+            }
         }
     }
+
     override suspend fun addTask(task: Task) {
         dao.insertTasks(
             TaskEntity(
@@ -27,6 +32,7 @@ class TaskRepositoryImpl(
             )
         )
     }
+
     override suspend fun updateTask(task: Task) {
         dao.updateTasks(
             TaskEntity(
@@ -37,6 +43,7 @@ class TaskRepositoryImpl(
             )
         )
     }
+
     override suspend fun deleteTask(task: Task) {
         dao.deleteTasks(
             TaskEntity(

@@ -7,10 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.ues.listadetareas.data.TaskViewModel
 import com.ues.listadetareas.domain.Task
 
 @Composable
-fun TaskListScreen() {
+fun TaskListScreen(viewModel: TaskViewModel, onNavigateToAddTask: () -> Unit) {
     val sampleTask = listOf(
         Task(id = 1, title = "Ir a la UES"),
         Task(id = 2, title = "Hacer tarea de Móviles Android"),

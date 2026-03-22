@@ -1,12 +1,12 @@
 package com.ues.listadetareas.data
 
 import androidx.room.*
-import com.ues.listadetareas.domain.Task
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
     @Query("SELECT * FROM tasks")
-    suspend fun getTasks(): List<TaskEntity>
+    fun getTasks(): Flow<List<TaskEntity>>
 
     @Insert
     suspend fun insertTasks(task: TaskEntity)
