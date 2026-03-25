@@ -17,32 +17,12 @@ fun MainContent(
     viewModel: TaskViewModel
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = "task_List"
-        ) {
-            // composable("splash") { SplashScreen(navController) }
 
-                composable("task_List") {
-                    TaskListScreen(
-                        viewModel = viewModel,
-                        onNavigateToAddTask = { navController.navigate("add_task") }
-                    )
-                }
-                composable("add_task") {
-                    AddTaskScreen(
-                        viewModel = viewModel,
-                        onBack = { navController.popBackStack() }
-                    )
-                }
+
+        Box(modifier = modifier.fillMaxSize()) {
+            TaskListScreen(viewModel) {
+                navController.navigate("addTask")
             }
         }
-
-
-
-    /*Box(modifier = modifier.fillMaxSize()) {
-        TaskListScreen(viewModel) {
-            navController.navigate("addTask")
-        }
-    }*/
+    }
 }

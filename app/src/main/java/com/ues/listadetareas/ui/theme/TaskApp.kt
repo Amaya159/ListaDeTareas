@@ -1,64 +1,149 @@
 package com.ues.listadetareas.ui.theme
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ues.listadetareas.data.TaskViewModel
 import com.ues.listadetareas.ui.theme.components.BottomNavigationBar
 import com.ues.listadetareas.ui.theme.components.DrawerContent
-import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskApp(viewModel: TaskViewModel) {
-    // Servirá para controlar el Drawer
+    val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    val navController = rememberNavController()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    // El NavHost ahora inicia en la pantalla "splash"
+    NavHost(navController = navController, startDestination = "splash") {
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            DrawerContent()
+        composable("splash") {
+            SplashScreen(onNavigateToMain = {
+                // Al terminar el splash, navegamos a la lista y limpiamos el historial
+                navController.navigate("task_list") {
+                    popUpTo("splash") { inclusive = true }
+                }
+            })
         }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Lista de Tareas") },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {scope.launch { drawerState.open() } }
-                        ) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menú")
+        composable("task_list") {
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    DrawerContent()
+                }
+            ) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Text(if (selectedTab == 0) "Tareas Pendientes"
+                                else "Tareas Completadas")
+                            },
+                            navigationIcon = {
+                                IconButton(
+                                    onClick = { scope.launch { drawerState.open()
+                                    } }
+                                ) {
+                                    Icon(Icons.Default.Menu, contentDescription =
+                                        "Menú")
+                                }
+                            }
+                        )
+                    },
+                    bottomBar = {
+                        BottomNavigationBar(
+                            selectedTab = selectedTab,
+                            onTabSelected = { selectedTab = it }
+                        )
+                    },
+                    floatingActionButton = {
+                        if (selectedTab == 0) {
+                            FloatingActionButton(onClick = {
+                                navController.navigate("add_task")
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription =
+                                    "Agregar tarea")
+                            }
                         }
                     }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar()
-            },
-            floatingActionButton = {
-                FloatingActionButton(onClick = {navController.navigate("addTask")}) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar tarea")
+                ) { innerPadding ->
+                    val tasks by viewModel.tasks.collectAsState()
+
+                    val filteredTasks = remember(tasks, selectedTab) {
+                        tasks.filter { it.isDone == (selectedTab == 1) }
+                    }
+                    MainContentFiltered(
+                        tasks = filteredTasks,
+                        viewModel = viewModel,
+                        onEditTask = { task ->
+                            navController.navigate("edit_task/${task.id}")
+                        },
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
-        ) { innerPadding ->
-            // Armaremos la pantalla principal
-            MainContent(
-                modifier = Modifier.padding(innerPadding),
-                navController = navController,
-                viewModel = viewModel
+        }
+
+        composable("add_task") {
+            AddTaskScreen(
+                onSave = { title, description ->
+                    viewModel.addTask(title, description)
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = "edit_task/{taskId}",
+            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
+            val tasks by viewModel.tasks.collectAsState()
+            val taskToEdit = tasks.find { it.id == taskId }
+            taskToEdit?.let { task ->
+                AddTaskScreen(
+                    initialTitle = task.title,
+                    initialDescription = task.description,
+                    isEditMode = true,
+                    onSave = { title, description ->
+                        viewModel.updateTask(task.copy(title = title, description
+                        = description))
+                        navController.popBackStack()
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
                 )
+            }
         }
     }
 }
-
+@Composable
+fun MainContentFiltered(
+    tasks: List<com.ues.listadetareas.domain.Task>,
+    viewModel: TaskViewModel,
+    onEditTask: (com.ues.listadetareas.domain.Task) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
+        com.ues.listadetareas.ui.theme.TaskListScreenContent(
+            tasks = tasks,
+            onToggleDone = { viewModel.toggleTaskCompletion(it) },
+            onEditTask = onEditTask
+        )
+    }
+}
